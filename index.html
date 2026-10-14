@@ -237,15 +237,11 @@ if([ref_facility]&gt;=3333 and [ref_facility]&lt;=3344,&#x27;HC IV&#x27;, if([re
 <section>
   <h2><span class="num">8</span>Method</h2>
   <p>Labels, choices and expressions were exported from the UCI-Ped-Reg REDCap data dictionary on 1 October 2026 through the REDCap API (metadata only; no records). The Group X expression <code>x_extended</code> is shown in its corrected form of 13 October 2026, in which the site conditions and the Xa5 morphology list follow the ICCC-3 (2017) definitions. The page evaluates them with a parser that follows REDCap's comparison rules: equality is numeric when both operands are numbers and textual otherwise, and an ordering comparison with a blank operand is false.</p>
-  <p>Before publication, this parser was compared with the registry's reference evaluator over every combination of the 157 Group X morphologies and 327 topography codes, the Group IV code expression and the branching logic of the fields above: 103,870 evaluations, 0 disagreements. The values in sections 5 and 6 were computed at publication by the reference evaluator from the expressions shown, and <code>age_days</code> was checked against the calendar difference between the two dates. The site classification returned by <code>x_extended</code> was compared with the ICCC-3 (2017) site definitions for Xa, Xb and Xc over 7,521 morphology and topography combinations: 0 disagreements.</p>
 </section>
 </main>
 
 <footer><div class="wrap">
   <p>Correspondence: jaymin@uccfug.org</p>
-  <p>Companion to a poster presented at the conference of the International Association of Cancer Registries, October 2026. No patient data are used on this page.</p>
-  <p>Steliarova-Foucher E, Stiller C, Lacour B, Kaatsch P. International Classification of Childhood Cancer, third edition. Cancer 2005;103:1457–67.<br>
-  Harris PA, Taylor R, Thielke R, Payne J, Gonzalez N, Conde JG. Research electronic data capture (REDCap). J Biomed Inform 2009;42:377–81.</p>
 </div></footer>
 
 <script>/* REDCap expression evaluator for the walkthrough page.
