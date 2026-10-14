@@ -1,0 +1,564 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Snippets of REDCap operations in a paediatric cancer registry | UCI-Ped-Reg</title>
+<meta name="description" content="Worked examples of REDCap branching logic and calculated fields in the UCI-Ped-Reg paediatric cancer registry: ICCC-3 Group X classification, age, and referring-facility location and level.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@400;500;600;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --ink:#00012B; --ink-800:#0A1140; --ink-600:#3B426B; --ink-500:#626890; --ink-300:#C2C5D6; --ink-200:#E1E3EC; --ink-100:#F1F2F7;
+  --sun:#F2D411; --sun-100:#FEF9D3; --sky:#00ACEA; --sky-500:#0089BE; --sky-100:#D3F1FC; --cream:#FBF6E7; --coral:#D8492C;
+  --mono:ui-monospace,SFMono-Regular,Menlo,Consolas,"Liberation Mono",monospace;
+}
+*{box-sizing:border-box}
+html{-webkit-text-size-adjust:100%}
+body{margin:0;background:#fff;color:var(--ink-800);font-family:Montserrat,"Segoe UI",system-ui,sans-serif;font-size:16px;line-height:1.6}
+.wrap{max-width:46rem;margin:0 auto;padding:0 16px}
+header{background:var(--cream);border-top:6px solid var(--sun);border-bottom:1px solid var(--ink-200)}
+header .wrap{padding-top:20px;padding-bottom:22px}
+header img{display:block;width:150px;height:auto;margin-bottom:14px}
+h1{font-size:1.45rem;line-height:1.25;font-weight:700;color:var(--ink);margin:0 0 6px;letter-spacing:-.01em}
+.subtitle{font-size:1.02rem;font-weight:500;color:var(--ink-600);margin:0 0 12px}
+.byline{font-size:.88rem;color:var(--ink-800);margin:0}
+.affil{font-size:.78rem;color:var(--ink-500);margin:4px 0 0;line-height:1.45}
+sup{font-size:.7em;line-height:0}
+.draft{margin:16px 0 0;padding:10px 12px;border:1px solid var(--coral);color:var(--coral);font-size:.85rem;background:#fff}
+main section{border-top:1px solid var(--ink-200);padding:22px 0 6px}
+main section:first-child{border-top:0}
+h2{font-size:1.08rem;font-weight:600;color:var(--ink);margin:0 0 10px}
+h2 .num{display:inline-block;min-width:1.6em;color:var(--sky-500)}
+h3{font-size:.95rem;font-weight:600;color:var(--ink);margin:18px 0 6px}
+p{margin:0 0 12px}
+.small{font-size:.84rem;color:var(--ink-600)}
+code,.mono{font-family:var(--mono);font-size:.84em}
+code{color:var(--ink)}
+fieldset{border:1px solid var(--ink-300);border-radius:2px;margin:0 0 14px;padding:12px 14px 14px}
+fieldset.off{background:var(--ink-100);border-style:dashed}
+legend{font-size:.78rem;font-weight:600;letter-spacing:.06em;text-transform:uppercase;color:var(--ink-500);padding:0 6px}
+.flabel{font-weight:600;color:var(--ink);margin:0 0 2px}
+.fvar{font-family:var(--mono);font-size:.78rem;color:var(--ink-500);margin:0 0 8px}
+.instr{font-size:.86rem;margin:0 0 8px}
+.instr b{font-weight:600}
+.rule{font-family:var(--mono);font-size:.76rem;color:var(--ink-600);border-left:2px solid var(--sky);padding:2px 0 2px 8px;margin:10px 0 0}
+.rule .ok{color:#157A44}
+.rule .no{color:var(--coral)}
+label.opt{display:flex;align-items:center;gap:10px;min-height:40px;padding:2px 0;font-size:.92rem;cursor:pointer}
+input[type=radio]{accent-color:var(--sky-500);width:18px;height:18px;margin:0}
+select{width:100%;min-height:44px;font:inherit;font-size:.92rem;color:var(--ink);background:#fff;border:1px solid var(--ink-500);border-radius:2px;padding:8px 10px}
+select:focus,input:focus,button:focus{outline:2px solid var(--sky);outline-offset:2px}
+.hidden-note{font-size:.86rem;color:var(--ink-500);margin:0}
+.actions{margin:4px 0 16px;font-size:.86rem}
+.actions button{font:inherit;font-size:.86rem;background:none;border:0;padding:0;color:var(--sky-500);text-decoration:underline;cursor:pointer;margin-right:18px}
+table{width:100%;border-collapse:collapse;font-size:.84rem;margin:0 0 12px}
+th,td{text-align:left;vertical-align:top;border-bottom:1px solid var(--ink-200);padding:7px 8px 7px 0}
+th{font-weight:600;color:var(--ink-600);font-size:.76rem;letter-spacing:.04em;text-transform:uppercase;border-bottom:1px solid var(--ink-300)}
+td.val{font-weight:600;color:var(--ink)}
+tr.current td{background:var(--sky-100)}
+.trace{list-style:none;margin:0 0 10px;padding:0;font-family:var(--mono);font-size:.74rem;line-height:1.5}
+.trace li{padding:4px 8px;border-left:3px solid transparent;color:var(--ink-500);word-break:break-word}
+.trace li.hit{background:var(--sun-100);border-left-color:var(--sun);color:var(--ink)}
+.trace li.ret{color:var(--ink);font-weight:700;border-left-color:var(--ink)}
+.trace .tag{font-family:Montserrat,sans-serif;font-size:.68rem;font-weight:600;letter-spacing:.04em;text-transform:uppercase;margin-right:6px}
+details{margin:0 0 14px}
+summary{cursor:pointer;font-size:.86rem;color:var(--sky-500)}
+pre{font-family:var(--mono);font-size:.72rem;line-height:1.5;white-space:pre-wrap;word-break:break-word;background:var(--ink-100);border:1px solid var(--ink-200);padding:10px;margin:8px 0 0;color:var(--ink)}
+ul.defs{margin:0 0 12px;padding-left:1.2em}
+ul.defs li{margin-bottom:6px}
+ol.plain{margin:0 0 12px;padding-left:1.3em}
+ol.plain li{margin-bottom:6px}
+footer{border-top:1px solid var(--ink-200);margin-top:18px;padding:18px 0 36px;font-size:.8rem;color:var(--ink-600)}
+footer p{margin:0 0 8px}
+@media (min-width:640px){h1{font-size:1.7rem} header img{width:180px} .trace{font-size:.78rem}}
+</style>
+</head>
+<body>
+<header><div class="wrap">
+  <img src="uccf-logo.png" alt="Uganda Child Cancer Foundation">
+  <h1>Snippets of REDCap operations in a paediatric cancer registry</h1>
+  <p class="subtitle">Worked example: Group X, germ cell tumours, trophoblastic tumours and neoplasms of gonads</p>
+  <p class="byline">Varsani J<sup>1</sup>, Kikonyogo S<sup>1</sup>, Abila DB<sup>2</sup>, Kansiime A<sup>2</sup>, Anecho E<sup>2</sup>, Angom R<sup>2</sup></p>
+  <p class="affil"><sup>1</sup>Uganda Child Cancer Foundation, Kampala, Uganda<br><sup>2</sup>Uganda Cancer Institute, Kampala, Uganda</p>
+  
+</div></header>
+
+<main class="wrap">
+<section>
+  <h2><span class="num">1</span>Scope</h2>
+  <p>UCI-Ped-Reg is a hospital-based paediatric cancer registry built on REDCap at the Uganda Cancer Institute. ICCC-3 coding is implemented with REDCap's native branching logic and <code>@CALCTEXT</code> calculated fields only.</p>
+  <p>This page reproduces, verbatim, the field labels, choices and expressions that assign the ICCC-3 extended classification and subgroup for Group X. In this group the result depends on two entered values: the ICD-O-3.2 morphology and the topography. The expressions run in your browser. Nothing you select is stored or transmitted.</p>
+  <p>Sections 5 and 6 show two further calculated fields from the same dictionary: age at the first UCI visit, and the location and level of the referring facility. Their values are shown for one illustrative entry each.</p>
+</section>
+
+<section>
+  <h2><span class="num">2</span>Data entry</h2>
+  <p>Complete the four fields in order. Each field is displayed only when its branching logic is satisfied, as on the registry form. The suggested entries reproduce a yolk sac tumour of the testis.</p>
+  <div class="actions"><button type="button" id="load">Enter the worked example</button><button type="button" id="clear">Clear all fields</button></div>
+
+  <fieldset id="f1"><legend>Field 1 of 4</legend>
+    <p class="flabel" data-label="dx_cancer"></p><p class="fvar">dx_cancer · yes/no</p>
+    <p class="instr">Suggested entry: <b>Yes</b></p>
+    <div id="c1"></div>
+    <p class="rule">Displayed on every record (no branching logic).</p>
+  </fieldset>
+
+  <fieldset id="f2"><legend>Field 2 of 4</legend>
+    <div class="body">
+      <p class="flabel" data-label="topo_code"></p><p class="fvar">topo_code · dropdown · ICD-O-3.2 topography</p>
+      <p class="instr">Suggested entry: <b>Testis, NOS (C62.9)</b>. The registry form lists 327 sites; eight are offered here.</p>
+      <select id="c2"><option value="">Select a site</option></select>
+    </div>
+    <p class="hidden-note">Not displayed.</p>
+    <p class="rule" data-rule="topo_code"></p>
+  </fieldset>
+
+  <fieldset id="f3"><legend>Field 3 of 4</legend>
+    <div class="body">
+      <p class="flabel" data-label="diag_main"></p><p class="fvar">diag_main · radio · ICCC-3 main group</p>
+      <p class="instr">Suggested entry: <b>X</b></p>
+      <div id="c3"></div>
+    </div>
+    <p class="hidden-note">Not displayed.</p>
+    <p class="rule" data-rule="diag_main"></p>
+  </fieldset>
+
+  <fieldset id="f4"><legend>Field 4 of 4</legend>
+    <div class="body">
+      <p class="flabel" data-label="x_morph"></p><p class="fvar">x_morph · dropdown · ICD-O-3.2 morphology</p>
+      <p class="instr">Suggested entry: <b>9071 - Yolk sac tumor</b>. The stored value is the morphology code itself. The registry form lists 157 Group X morphologies; five are offered here.</p>
+      <select id="c4"><option value="">Select a morphology</option></select>
+    </div>
+    <p class="hidden-note">Not displayed.</p>
+    <p class="rule" data-rule="x_morph"></p>
+  </fieldset>
+</section>
+
+<section id="s3">
+  <h2><span class="num">3</span>Calculated values</h2>
+  <p id="s3-wait" class="small">Complete fields 1 to 4 to see the values REDCap calculates.</p>
+  <div id="s3-body">
+    <table>
+      <thead><tr><th>Variable</th><th>Stored value</th><th>Origin</th></tr></thead>
+      <tbody id="res"></tbody>
+    </table>
+    <h3>How <code>x_extended</code> is derived</h3>
+    <p class="small">The expression is a chain of <code>if()</code> conditions on <code>x_morph</code> and <code>topo_code</code>, read in order. The first condition that holds returns its label; the conditions before it do not hold.</p>
+    <ol class="trace" id="trace-ext"></ol>
+    <details><summary>Show the complete <code>x_extended</code> expression</summary><pre id="full-ext"></pre></details>
+    <h3>How <code>x_subgroup</code> is derived</h3>
+    <p class="small"><code>x_subgroup</code> reads <code>x_extended</code>: its first two characters (<code>left([x_extended],2)</code>) select the subgroup.</p>
+    <ol class="trace" id="trace-sub"></ol>
+    <details><summary>Show the complete <code>x_subgroup</code> expression</summary><pre id="full-sub"></pre></details>
+  </div>
+</section>
+
+<section id="s4">
+  <h2><span class="num">4</span>Effect of topography</h2>
+  <p id="s4-wait" class="small">Select a morphology in field 4 to compare sites.</p>
+  <div id="s4-body">
+    <p>The same morphology, <span id="s4-morph" class="mono"></span>, evaluated at each site offered in field 2. The highlighted row is the site currently selected.</p>
+    <table>
+      <thead><tr><th>Site</th><th><code>x_extended</code></th><th><code>x_subgroup</code></th></tr></thead>
+      <tbody id="sites"></tbody>
+    </table>
+  </div>
+</section>
+
+<section>
+  <h2><span class="num">5</span>Age at the first UCI visit</h2>
+  <p>Age is not entered. Three calculated fields derive it from the date of birth on the Demographics instrument and the date of the first visit to UCI on the Referral characteristics instrument. <code>age_days</code> counts the days between the two dates; <code>age_months</code> and <code>age_year</code> divide that count by one twelfth of the Julian year (30.4375 days) and by the Julian year (365.25 days) and round down, so both express completed months and years.</p>
+  <table>
+    <thead><tr><th>Variable</th><th>Value</th><th>Source or expression</th></tr></thead>
+    <tbody><tr><td class="mono">date_birth</td><td class="val">14-03-2019</td><td>Entered (Demographics)</td></tr><tr><td class="mono">visit_date</td><td class="val">02-06-2025</td><td>Entered (Referral characteristics): first visit to UCI</td></tr><tr><td class="mono">age_days</td><td class="val">2272</td><td><code>datediff([date_birth], [visit_date], &quot;d&quot;, &quot;dmy&quot;, true)</code></td></tr><tr><td class="mono">age_months</td><td class="val">74</td><td><code>rounddown([age_days]/30.4375, 0)</code></td></tr><tr><td class="mono">age_year</td><td class="val">6</td><td><code>rounddown([age_days]/365.25, 0)</code></td></tr></tbody>
+  </table>
+  <p class="small">Dates are illustrative and do not belong to a registered patient. Because age is anchored to the first UCI visit, it does not increase with time; it changes only if either date is corrected.</p>
+</section>
+
+<section>
+  <h2><span class="num">6</span>Location and level of the referring facility</h2>
+  <p>When a child is referred from a facility in Uganda, the abstractor selects it from <code>ref_facility</code>, a list of 3,346 facilities. The stored value is the facility's position in that list. Two calculated fields read that number:</p>
+  <ul class="defs">
+    <li><code>facility_location</code> returns one of 146 locations (136 districts and 10 cities). The expression is a binary search: 538 nested comparisons of the form <code>[ref_facility]&lt; n</code>, of which any one facility passes through at most 10.</li>
+    <li><code>facility_level</code> returns one of 6 levels of care from contiguous ranges of positions.</li>
+  </ul>
+  <table>
+    <thead><tr><th>Variable</th><th>Value</th><th>Origin</th></tr></thead>
+    <tbody>
+      <tr><td class="mono">ref_facility</td><td class="val">3001</td><td>Entered: Gulu Regional Referral Hospital</td></tr>
+      <tr><td class="mono">facility_location</td><td class="val">Gulu City</td><td>Calculated by <code>@CALCTEXT</code> from <code>ref_facility</code></td></tr>
+      <tr><td class="mono">facility_level</td><td class="val">RRH</td><td>Calculated by <code>@CALCTEXT</code> from <code>ref_facility</code></td></tr>
+    </tbody>
+  </table>
+  <h3>How <code>facility_location</code> is derived for value 3001</h3>
+  <p class="small">The first condition returns a blank location when no facility is selected. Each comparison after it splits the remaining range of positions in two: a satisfied comparison takes the first branch, an unsatisfied one the second. For this facility, 9 comparisons reach the result.</p>
+  <ol class="trace"><li><span class="tag">Not satisfied</span>[ref_facility] = &#x27;&#x27;</li><li><span class="tag">Not satisfied</span>[ref_facility]&lt; 1984</li><li><span class="tag">Not satisfied</span>[ref_facility]&lt; 2901</li><li class="hit"><span class="tag">Satisfied</span>[ref_facility]&lt; 3041</li><li><span class="tag">Not satisfied</span>[ref_facility]&lt; 2979</li><li class="hit"><span class="tag">Satisfied</span>[ref_facility]&lt; 3006</li><li><span class="tag">Not satisfied</span>[ref_facility]&lt; 2988</li><li><span class="tag">Not satisfied</span>[ref_facility]&lt; 3001</li><li class="hit"><span class="tag">Satisfied</span>[ref_facility]&lt; 3003</li><li class="hit"><span class="tag">Satisfied</span>[ref_facility]&lt; 3002</li><li class="ret"><span class="tag">Returns</span>&#x27;Gulu City&#x27;</li></ol>
+  <details><summary>Show the complete <code>facility_location</code> expression</summary><pre>if([ref_facility] = &#x27;&#x27;, &#x27;&#x27;,
+if([ref_facility]&lt; 1984,if([ref_facility]&lt; 561,if([ref_facility]&lt; 394,if([ref_facility]&lt; 179,if([ref_facility]&lt; 89,if([ref_facility]&lt; 27,if([ref_facility]&lt; 17,if([ref_facility]&lt; 11,if([ref_facility]&lt; 2,&#x27;Amuru District&#x27;,&#x27;Gulu City&#x27;),if([ref_facility]&lt; 13,&#x27;Gulu District&#x27;,&#x27;Kitgum District&#x27;)),if([ref_facility]&lt; 19,if([ref_facility]&lt; 18,&#x27;Lamwo District&#x27;,&#x27;Nwoya District&#x27;),if([ref_facility]&lt; 25,&#x27;Pader District&#x27;,&#x27;Bushenyi District&#x27;))),if([ref_facility]&lt; 70,if([ref_facility]&lt; 51,if([ref_facility]&lt; 47,&#x27;Ibanda District&#x27;,&#x27;Kazo District&#x27;),if([ref_facility]&lt; 58,&#x27;Kiruhura District&#x27;,&#x27;Mbarara City&#x27;)),if([ref_facility]&lt; 84,if([ref_facility]&lt; 74,&#x27;Mbarara District&#x27;,&#x27;Ntungamo District&#x27;),if([ref_facility]&lt; 86,&#x27;Rwampara District&#x27;,&#x27;Sheema District&#x27;)))),if([ref_facility]&lt; 156,if([ref_facility]&lt; 100,if([ref_facility]&lt; 92,if([ref_facility]&lt; 90,&#x27;Kapchorwa District&#x27;,&#x27;Manafwa District&#x27;),if([ref_facility]&lt; 96,&#x27;Mbale City&#x27;,&#x27;Namisindwa District&#x27;)),if([ref_facility]&lt; 104,if([ref_facility]&lt; 103,&#x27;Busia District&#x27;,&#x27;Butaleja District&#x27;),if([ref_facility]&lt; 105,&#x27;Pallisa District&#x27;,&#x27;Tororo District&#x27;))),if([ref_facility]&lt; 165,if([ref_facility]&lt; 162,if([ref_facility]&lt; 159,&#x27;Hoima City&#x27;,&#x27;Kagadi District&#x27;),if([ref_facility]&lt; 164,&#x27;Kakumiro District&#x27;,&#x27;Kibaale District&#x27;)),if([ref_facility]&lt; 171,if([ref_facility]&lt; 166,&#x27;Kikuube District&#x27;,&#x27;Kiryandongo District&#x27;),if([ref_facility]&lt; 172,&#x27;Masindi District&#x27;,if([ref_facility]&lt; 177,&#x27;Bugiri District&#x27;,&#x27;Bugweri District&#x27;)))))),if([ref_facility]&lt; 253,if([ref_facility]&lt; 234,if([ref_facility]&lt; 215,if([ref_facility]&lt; 203,if([ref_facility]&lt; 188,&#x27;Iganga District&#x27;,&#x27;Jinja City&#x27;),if([ref_facility]&lt; 205,&#x27;Jinja District&#x27;,&#x27;Mayuge District&#x27;)),if([ref_facility]&lt; 231,if([ref_facility]&lt; 216,&#x27;Namayingo District&#x27;,&#x27;Kampala District&#x27;),if([ref_facility]&lt; 233,&#x27;Amudat District&#x27;,&#x27;Moroto District&#x27;))),if([ref_facility]&lt; 241,if([ref_facility]&lt; 239,if([ref_facility]&lt; 237,&#x27;Kabale District&#x27;,&#x27;Kisoro District&#x27;),if([ref_facility]&lt; 240,&#x27;Rukiga District&#x27;,&#x27;Rukungiri District&#x27;)),if([ref_facility]&lt; 244,if([ref_facility]&lt; 243,&#x27;Apac District&#x27;,&#x27;Dokolo District&#x27;),if([ref_facility]&lt; 250,&#x27;Kole District&#x27;,if([ref_facility]&lt; 252,&#x27;Kwania District&#x27;,&#x27;Lira City&#x27;))))),if([ref_facility]&lt; 332,if([ref_facility]&lt; 297,if([ref_facility]&lt; 257,if([ref_facility]&lt; 254,&#x27;Lira District&#x27;,&#x27;Buikwe District&#x27;),if([ref_facility]&lt; 296,&#x27;Kayunga District&#x27;,&#x27;Kiboga District&#x27;)),if([ref_facility]&lt; 299,if([ref_facility]&lt; 298,&#x27;Luwero District&#x27;,&#x27;Mubende District&#x27;),if([ref_facility]&lt; 331,&#x27;Mukono District&#x27;,&#x27;Gomba District&#x27;))),if([ref_facility]&lt; 356,if([ref_facility]&lt; 335,if([ref_facility]&lt; 334,&#x27;Kalangala District&#x27;,&#x27;Kalungu District&#x27;),if([ref_facility]&lt; 345,&#x27;Kyotera District&#x27;,&#x27;Lyantonde District&#x27;)),if([ref_facility]&lt; 376,if([ref_facility]&lt; 374,&#x27;Masaka City&#x27;,&#x27;Masaka District&#x27;),if([ref_facility]&lt; 384,&#x27;Sembabule District&#x27;,if([ref_facility]&lt; 393,&#x27;Wakiso District&#x27;,&#x27;Amuria District&#x27;))))))),if([ref_facility]&lt; 469,if([ref_facility]&lt; 433,if([ref_facility]&lt; 413,if([ref_facility]&lt; 399,if([ref_facility]&lt; 396,if([ref_facility]&lt; 395,&#x27;Kaberamaido District&#x27;,&#x27;Katakwi District&#x27;),if([ref_facility]&lt; 398,&#x27;Soroti City&#x27;,&#x27;Bunyangabu District&#x27;)),if([ref_facility]&lt; 404,if([ref_facility]&lt; 403,&#x27;Kyenjojo District&#x27;,&#x27;Adjumani District&#x27;),if([ref_facility]&lt; 407,&#x27;Arua City&#x27;,&#x27;Koboko District&#x27;))),if([ref_facility]&lt; 425,if([ref_facility]&lt; 418,if([ref_facility]&lt; 417,&#x27;Moyo District&#x27;,&#x27;Obongi District&#x27;),if([ref_facility]&lt; 422,&#x27;Yumbe District&#x27;,&#x27;Zombo District&#x27;)),if([ref_facility]&lt; 427,if([ref_facility]&lt; 426,&#x27;Agago District&#x27;,&#x27;Amuru District&#x27;),if([ref_facility]&lt; 430,&#x27;Gulu City&#x27;,&#x27;Kitgum District&#x27;)))),if([ref_facility]&lt; 450,if([ref_facility]&lt; 439,if([ref_facility]&lt; 435,if([ref_facility]&lt; 434,&#x27;Nwoya District&#x27;,&#x27;Buhweju District&#x27;),if([ref_facility]&lt; 438,&#x27;Bushenyi District&#x27;,&#x27;Ibanda District&#x27;)),if([ref_facility]&lt; 447,if([ref_facility]&lt; 440,&#x27;Kiruhura District&#x27;,&#x27;Mbarara City&#x27;),if([ref_facility]&lt; 448,&#x27;Mitooma District&#x27;,&#x27;Ntungamo District&#x27;))),if([ref_facility]&lt; 458,if([ref_facility]&lt; 452,if([ref_facility]&lt; 451,&#x27;Sheema District&#x27;,&#x27;Bududa District&#x27;),if([ref_facility]&lt; 453,&#x27;Kapchorwa District&#x27;,&#x27;Mbale City&#x27;)),if([ref_facility]&lt; 462,if([ref_facility]&lt; 460,&#x27;Busia District&#x27;,&#x27;Butaleja District&#x27;),if([ref_facility]&lt; 463,&#x27;Butebo District&#x27;,if([ref_facility]&lt; 464,&#x27;Pallisa District&#x27;,&#x27;Tororo District&#x27;)))))),if([ref_facility]&lt; 528,if([ref_facility]&lt; 479,if([ref_facility]&lt; 474,if([ref_facility]&lt; 472,if([ref_facility]&lt; 470,&#x27;Buliisa District&#x27;,&#x27;Hoima City&#x27;),if([ref_facility]&lt; 473,&#x27;Kagadi District&#x27;,&#x27;Kakumiro District&#x27;)),if([ref_facility]&lt; 477,if([ref_facility]&lt; 476,&#x27;Kiryandongo District&#x27;,&#x27;Masindi District&#x27;),if([ref_facility]&lt; 478,&#x27;Bugiri District&#x27;,&#x27;Iganga District&#x27;))),if([ref_facility]&lt; 488,if([ref_facility]&lt; 485,if([ref_facility]&lt; 482,&#x27;Jinja City&#x27;,&#x27;Jinja District&#x27;),if([ref_facility]&lt; 487,&#x27;Kamuli District&#x27;,&#x27;Mayuge District&#x27;)),if([ref_facility]&lt; 525,if([ref_facility]&lt; 489,&#x27;Namutumba District&#x27;,&#x27;Kampala District&#x27;),if([ref_facility]&lt; 526,&#x27;Abim District&#x27;,if([ref_facility]&lt; 527,&#x27;Amudat District&#x27;,&#x27;Kaabong District&#x27;))))),if([ref_facility]&lt; 540,if([ref_facility]&lt; 534,if([ref_facility]&lt; 530,if([ref_facility]&lt; 529,&#x27;Kotido District&#x27;,&#x27;Napak District&#x27;),if([ref_facility]&lt; 532,&#x27;Kabale District&#x27;,&#x27;Kanungu District&#x27;)),if([ref_facility]&lt; 537,if([ref_facility]&lt; 536,&#x27;Kisoro District&#x27;,&#x27;Rubanda District&#x27;),if([ref_facility]&lt; 539,&#x27;Rukungiri District&#x27;,&#x27;Amolatar District&#x27;))),if([ref_facility]&lt; 550,if([ref_facility]&lt; 544,if([ref_facility]&lt; 542,&#x27;Apac District&#x27;,&#x27;Lira City&#x27;),if([ref_facility]&lt; 545,&#x27;Oyam District&#x27;,&#x27;Buikwe District&#x27;)),if([ref_facility]&lt; 554,if([ref_facility]&lt; 551,&#x27;Kiboga District&#x27;,&#x27;Luwero District&#x27;),if([ref_facility]&lt; 555,&#x27;Mityana District&#x27;,if([ref_facility]&lt; 557,&#x27;Mubende District&#x27;,&#x27;Mukono District&#x27;)))))))),if([ref_facility]&lt; 1033,if([ref_facility]&lt; 625,if([ref_facility]&lt; 591,if([ref_facility]&lt; 573,if([ref_facility]&lt; 566,if([ref_facility]&lt; 564,if([ref_facility]&lt; 563,&#x27;Nakaseke District&#x27;,&#x27;Nakasongola District&#x27;),if([ref_facility]&lt; 565,&#x27;Butambala District&#x27;,&#x27;Kalungu District&#x27;)),if([ref_facility]&lt; 569,if([ref_facility]&lt; 568,&#x27;Kyotera District&#x27;,&#x27;Lyantonde District&#x27;),if([ref_facility]&lt; 570,&#x27;Masaka City&#x27;,&#x27;Mpigi District&#x27;))),if([ref_facility]&lt; 587,if([ref_facility]&lt; 575,if([ref_facility]&lt; 574,&#x27;Rakai District&#x27;,&#x27;Sembabule District&#x27;),if([ref_facility]&lt; 586,&#x27;Wakiso District&#x27;,&#x27;Amuria District&#x27;)),if([ref_facility]&lt; 589,if([ref_facility]&lt; 588,&#x27;Bukedea District&#x27;,&#x27;Kaberamaido District&#x27;),if([ref_facility]&lt; 590,&#x27;Kalaki District&#x27;,&#x27;Katakwi District&#x27;)))),if([ref_facility]&lt; 612,if([ref_facility]&lt; 598,if([ref_facility]&lt; 595,if([ref_facility]&lt; 594,&#x27;Kumi District&#x27;,&#x27;Ngora District&#x27;),if([ref_facility]&lt; 597,&#x27;Soroti City&#x27;,&#x27;Bundibugyo District&#x27;)),if([ref_facility]&lt; 604,if([ref_facility]&lt; 603,&#x27;Fort Portal City&#x27;,&#x27;Kabarole District&#x27;),if([ref_facility]&lt; 605,&#x27;Kamwenge District&#x27;,&#x27;Kasese District&#x27;))),if([ref_facility]&lt; 619,if([ref_facility]&lt; 614,if([ref_facility]&lt; 613,&#x27;Kyegegwa District&#x27;,&#x27;Kyenjojo District&#x27;),if([ref_facility]&lt; 615,&#x27;Adjumani District&#x27;,&#x27;Arua City&#x27;)),if([ref_facility]&lt; 621,if([ref_facility]&lt; 620,&#x27;Arua District&#x27;,&#x27;Koboko District&#x27;),if([ref_facility]&lt; 622,&#x27;Maracha District&#x27;,if([ref_facility]&lt; 623,&#x27;Moyo District&#x27;,&#x27;Nebbi District&#x27;)))))),if([ref_facility]&lt; 818,if([ref_facility]&lt; 688,if([ref_facility]&lt; 650,if([ref_facility]&lt; 627,if([ref_facility]&lt; 626,&#x27;Terego District&#x27;,&#x27;Zombo District&#x27;),if([ref_facility]&lt; 641,&#x27;Agago District&#x27;,&#x27;Amuru District&#x27;)),if([ref_facility]&lt; 667,if([ref_facility]&lt; 661,&#x27;Gulu City&#x27;,&#x27;Gulu District&#x27;),if([ref_facility]&lt; 677,&#x27;Kitgum District&#x27;,&#x27;Lamwo District&#x27;))),if([ref_facility]&lt; 735,if([ref_facility]&lt; 711,if([ref_facility]&lt; 697,&#x27;Nwoya District&#x27;,&#x27;Omoro District&#x27;),if([ref_facility]&lt; 725,&#x27;Pader District&#x27;,&#x27;Buhweju District&#x27;)),if([ref_facility]&lt; 763,if([ref_facility]&lt; 750,&#x27;Bushenyi District&#x27;,&#x27;Ibanda District&#x27;),if([ref_facility]&lt; 792,&#x27;Isingiro District&#x27;,if([ref_facility]&lt; 803,&#x27;Kazo District&#x27;,&#x27;Kiruhura District&#x27;))))),if([ref_facility]&lt; 918,if([ref_facility]&lt; 872,if([ref_facility]&lt; 832,if([ref_facility]&lt; 826,&#x27;Mbarara City&#x27;,&#x27;Mbarara District&#x27;),if([ref_facility]&lt; 844,&#x27;Mitooma District&#x27;,&#x27;Ntungamo District&#x27;)),if([ref_facility]&lt; 889,if([ref_facility]&lt; 884,&#x27;Rubirizi District&#x27;,&#x27;Rwampara District&#x27;),if([ref_facility]&lt; 907,&#x27;Sheema District&#x27;,&#x27;Bududa District&#x27;))),if([ref_facility]&lt; 966,if([ref_facility]&lt; 946,if([ref_facility]&lt; 927,&#x27;Bukwo District&#x27;,&#x27;Bulambuli District&#x27;),if([ref_facility]&lt; 956,&#x27;Kapchorwa District&#x27;,&#x27;Kween District&#x27;)),if([ref_facility]&lt; 983,if([ref_facility]&lt; 971,&#x27;Manafwa District&#x27;,&#x27;Mbale City&#x27;),if([ref_facility]&lt; 1001,&#x27;Mbale District&#x27;,if([ref_facility]&lt; 1011,&#x27;Namisindwa District&#x27;,&#x27;Sironko District&#x27;))))))),if([ref_facility]&lt; 1500,if([ref_facility]&lt; 1285,if([ref_facility]&lt; 1150,if([ref_facility]&lt; 1081,if([ref_facility]&lt; 1064,if([ref_facility]&lt; 1049,&#x27;Budaka District&#x27;,&#x27;Busia District&#x27;),if([ref_facility]&lt; 1075,&#x27;Butaleja District&#x27;,&#x27;Butebo District&#x27;)),if([ref_facility]&lt; 1115,if([ref_facility]&lt; 1095,&#x27;Kibuku District&#x27;,&#x27;Pallisa District&#x27;),if([ref_facility]&lt; 1142,&#x27;Tororo District&#x27;,&#x27;Buliisa District&#x27;))),if([ref_facility]&lt; 1211,if([ref_facility]&lt; 1165,if([ref_facility]&lt; 1157,&#x27;Hoima City&#x27;,&#x27;Hoima District&#x27;),if([ref_facility]&lt; 1182,&#x27;Kagadi District&#x27;,&#x27;Kakumiro District&#x27;)),if([ref_facility]&lt; 1248,if([ref_facility]&lt; 1226,&#x27;Kibaale District&#x27;,&#x27;Kikuube District&#x27;),if([ref_facility]&lt; 1256,&#x27;Kiryandongo District&#x27;,if([ref_facility]&lt; 1274,&#x27;Masindi District&#x27;,&#x27;Bugiri District&#x27;))))),if([ref_facility]&lt; 1390,if([ref_facility]&lt; 1330,if([ref_facility]&lt; 1299,if([ref_facility]&lt; 1292,&#x27;Bugweri District&#x27;,&#x27;Buyende District&#x27;),if([ref_facility]&lt; 1310,&#x27;Iganga District&#x27;,&#x27;Jinja City&#x27;)),if([ref_facility]&lt; 1354,if([ref_facility]&lt; 1339,&#x27;Jinja District&#x27;,&#x27;Kaliro District&#x27;),if([ref_facility]&lt; 1377,&#x27;Kamuli District&#x27;,&#x27;Luuka District&#x27;))),if([ref_facility]&lt; 1470,if([ref_facility]&lt; 1417,if([ref_facility]&lt; 1406,&#x27;Mayuge District&#x27;,&#x27;Namayingo District&#x27;),if([ref_facility]&lt; 1426,&#x27;Namutumba District&#x27;,&#x27;Kampala District&#x27;)),if([ref_facility]&lt; 1478,if([ref_facility]&lt; 1474,&#x27;Abim District&#x27;,&#x27;Amudat District&#x27;),if([ref_facility]&lt; 1486,&#x27;Kaabong District&#x27;,if([ref_facility]&lt; 1490,&#x27;Karenga District&#x27;,&#x27;Kotido District&#x27;)))))),if([ref_facility]&lt; 1704,if([ref_facility]&lt; 1588,if([ref_facility]&lt; 1522,if([ref_facility]&lt; 1511,if([ref_facility]&lt; 1509,&#x27;Moroto District&#x27;,&#x27;Nabilatuk District&#x27;),if([ref_facility]&lt; 1515,&#x27;Nakapiripirit District&#x27;,&#x27;Napak District&#x27;)),if([ref_facility]&lt; 1556,if([ref_facility]&lt; 1537,&#x27;Kabale District&#x27;,&#x27;Kanungu District&#x27;),if([ref_facility]&lt; 1578,&#x27;Kisoro District&#x27;,&#x27;Rubanda District&#x27;))),if([ref_facility]&lt; 1639,if([ref_facility]&lt; 1618,if([ref_facility]&lt; 1595,&#x27;Rukiga District&#x27;,&#x27;Rukungiri District&#x27;),if([ref_facility]&lt; 1628,&#x27;Alebtong District&#x27;,&#x27;Amolatar District&#x27;)),if([ref_facility]&lt; 1658,if([ref_facility]&lt; 1647,&#x27;Apac District&#x27;,&#x27;Dokolo District&#x27;),if([ref_facility]&lt; 1671,&#x27;Kole District&#x27;,if([ref_facility]&lt; 1681,&#x27;Kwania District&#x27;,&#x27;Lira City&#x27;))))),if([ref_facility]&lt; 1811,if([ref_facility]&lt; 1761,if([ref_facility]&lt; 1721,if([ref_facility]&lt; 1710,&#x27;Lira District&#x27;,&#x27;Otuke District&#x27;),if([ref_facility]&lt; 1741,&#x27;Oyam District&#x27;,&#x27;Buikwe District&#x27;)),if([ref_facility]&lt; 1783,if([ref_facility]&lt; 1769,&#x27;Buvuma District&#x27;,&#x27;Kassanda District&#x27;),if([ref_facility]&lt; 1798,&#x27;Kayunga District&#x27;,&#x27;Kiboga District&#x27;))),if([ref_facility]&lt; 1909,if([ref_facility]&lt; 1854,if([ref_facility]&lt; 1825,&#x27;Kyankwanzi District&#x27;,&#x27;Luwero District&#x27;),if([ref_facility]&lt; 1888,&#x27;Mityana District&#x27;,&#x27;Mubende District&#x27;)),if([ref_facility]&lt; 1952,if([ref_facility]&lt; 1940,&#x27;Mukono District&#x27;,&#x27;Nakaseke District&#x27;),if([ref_facility]&lt; 1963,&#x27;Nakasongola District&#x27;,if([ref_facility]&lt; 1976,&#x27;Bukomansimbi District&#x27;,&#x27;Butambala District&#x27;))))))))),if([ref_facility]&lt; 2901,if([ref_facility]&lt; 2747,if([ref_facility]&lt; 2539,if([ref_facility]&lt; 2299,if([ref_facility]&lt; 2072,if([ref_facility]&lt; 2033,if([ref_facility]&lt; 2002,if([ref_facility]&lt; 1995,&#x27;Gomba District&#x27;,&#x27;Kalangala District&#x27;),if([ref_facility]&lt; 2014,&#x27;Kalungu District&#x27;,&#x27;Kyotera District&#x27;)),if([ref_facility]&lt; 2053,if([ref_facility]&lt; 2045,&#x27;Lwengo District&#x27;,&#x27;Lyantonde District&#x27;),if([ref_facility]&lt; 2066,&#x27;Masaka City&#x27;,&#x27;Masaka District&#x27;))),if([ref_facility]&lt; 2258,if([ref_facility]&lt; 2120,if([ref_facility]&lt; 2108,&#x27;Mpigi District&#x27;,&#x27;Rakai District&#x27;),if([ref_facility]&lt; 2130,&#x27;Sembabule District&#x27;,&#x27;Wakiso District&#x27;)),if([ref_facility]&lt; 2284,if([ref_facility]&lt; 2272,&#x27;Amuria District&#x27;,&#x27;Bukedea District&#x27;),if([ref_facility]&lt; 2294,&#x27;Kaberamaido District&#x27;,&#x27;Kalaki District&#x27;)))),if([ref_facility]&lt; 2379,if([ref_facility]&lt; 2331,if([ref_facility]&lt; 2317,if([ref_facility]&lt; 2305,&#x27;Kapelebyong District&#x27;,&#x27;Katakwi District&#x27;),if([ref_facility]&lt; 2324,&#x27;Kumi District&#x27;,&#x27;Ngora District&#x27;)),if([ref_facility]&lt; 2358,if([ref_facility]&lt; 2344,&#x27;Serere District&#x27;,&#x27;Soroti City&#x27;),if([ref_facility]&lt; 2363,&#x27;Soroti District&#x27;,&#x27;Bundibugyo District&#x27;))),if([ref_facility]&lt; 2437,if([ref_facility]&lt; 2404,if([ref_facility]&lt; 2395,&#x27;Bunyangabu District&#x27;,&#x27;Fort Portal City&#x27;),if([ref_facility]&lt; 2422,&#x27;Kabarole District&#x27;,&#x27;Kamwenge District&#x27;)),if([ref_facility]&lt; 2499,if([ref_facility]&lt; 2492,&#x27;Kasese District&#x27;,&#x27;Kitagwenda District&#x27;),if([ref_facility]&lt; 2509,&#x27;Kyegegwa District&#x27;,if([ref_facility]&lt; 2533,&#x27;Kyenjojo District&#x27;,&#x27;Ntoroko District&#x27;)))))),if([ref_facility]&lt; 2715,if([ref_facility]&lt; 2644,if([ref_facility]&lt; 2593,if([ref_facility]&lt; 2571,if([ref_facility]&lt; 2557,&#x27;Adjumani District&#x27;,&#x27;Arua City&#x27;),if([ref_facility]&lt; 2577,&#x27;Arua District&#x27;,&#x27;Koboko District&#x27;)),if([ref_facility]&lt; 2619,if([ref_facility]&lt; 2603,&#x27;Madi-Okollo District&#x27;,&#x27;Maracha District&#x27;),if([ref_facility]&lt; 2632,&#x27;Moyo District&#x27;,&#x27;Nebbi District&#x27;))),if([ref_facility]&lt; 2700,if([ref_facility]&lt; 2657,if([ref_facility]&lt; 2650,&#x27;Obongi District&#x27;,&#x27;Pakwach District&#x27;),if([ref_facility]&lt; 2671,&#x27;Terego District&#x27;,&#x27;Yumbe District&#x27;)),if([ref_facility]&lt; 2712,if([ref_facility]&lt; 2711,&#x27;Zombo District&#x27;,&#x27;Agago District&#x27;),if([ref_facility]&lt; 2713,&#x27;Amuru District&#x27;,if([ref_facility]&lt; 2714,&#x27;Gulu District&#x27;,&#x27;Kitgum District&#x27;))))),if([ref_facility]&lt; 2731,if([ref_facility]&lt; 2722,if([ref_facility]&lt; 2719,if([ref_facility]&lt; 2718,&#x27;Lamwo District&#x27;,&#x27;Omoro District&#x27;),if([ref_facility]&lt; 2721,&#x27;Pader District&#x27;,&#x27;Buhweju District&#x27;)),if([ref_facility]&lt; 2726,if([ref_facility]&lt; 2724,&#x27;Bushenyi District&#x27;,&#x27;Ibanda District&#x27;),if([ref_facility]&lt; 2730,&#x27;Isingiro District&#x27;,&#x27;Kazo District&#x27;))),if([ref_facility]&lt; 2736,if([ref_facility]&lt; 2734,if([ref_facility]&lt; 2732,&#x27;Kiruhura District&#x27;,&#x27;Mbarara City&#x27;),if([ref_facility]&lt; 2735,&#x27;Mbarara District&#x27;,&#x27;Mitooma District&#x27;)),if([ref_facility]&lt; 2742,if([ref_facility]&lt; 2741,&#x27;Ntungamo District&#x27;,&#x27;Rubirizi District&#x27;),if([ref_facility]&lt; 2744,&#x27;Rwampara District&#x27;,if([ref_facility]&lt; 2746,&#x27;Sheema District&#x27;,&#x27;Bududa District&#x27;))))))),if([ref_facility]&lt; 2809,if([ref_facility]&lt; 2775,if([ref_facility]&lt; 2760,if([ref_facility]&lt; 2753,if([ref_facility]&lt; 2751,if([ref_facility]&lt; 2750,&#x27;Bukwo District&#x27;,&#x27;Bulambuli District&#x27;),if([ref_facility]&lt; 2752,&#x27;Kapchorwa District&#x27;,&#x27;Kween District&#x27;)),if([ref_facility]&lt; 2758,if([ref_facility]&lt; 2755,&#x27;Manafwa District&#x27;,&#x27;Mbale City&#x27;),if([ref_facility]&lt; 2759,&#x27;Mbale District&#x27;,&#x27;Namisindwa District&#x27;))),if([ref_facility]&lt; 2766,if([ref_facility]&lt; 2763,if([ref_facility]&lt; 2762,&#x27;Sironko District&#x27;,&#x27;Budaka District&#x27;),if([ref_facility]&lt; 2764,&#x27;Busia District&#x27;,&#x27;Butaleja District&#x27;)),if([ref_facility]&lt; 2768,if([ref_facility]&lt; 2767,&#x27;Butebo District&#x27;,&#x27;Kibuku District&#x27;),if([ref_facility]&lt; 2771,&#x27;Tororo District&#x27;,if([ref_facility]&lt; 2773,&#x27;Buliisa District&#x27;,&#x27;Hoima City&#x27;))))),if([ref_facility]&lt; 2790,if([ref_facility]&lt; 2781,if([ref_facility]&lt; 2777,if([ref_facility]&lt; 2776,&#x27;Hoima District&#x27;,&#x27;Kagadi District&#x27;),if([ref_facility]&lt; 2780,&#x27;Kakumiro District&#x27;,&#x27;Kibaale District&#x27;)),if([ref_facility]&lt; 2784,if([ref_facility]&lt; 2783,&#x27;Kikuube District&#x27;,&#x27;Kiryandongo District&#x27;),if([ref_facility]&lt; 2789,&#x27;Masindi District&#x27;,&#x27;Bugiri District&#x27;))),if([ref_facility]&lt; 2798,if([ref_facility]&lt; 2793,if([ref_facility]&lt; 2791,&#x27;Bugweri District&#x27;,&#x27;Buyende District&#x27;),if([ref_facility]&lt; 2794,&#x27;Iganga District&#x27;,&#x27;Jinja City&#x27;)),if([ref_facility]&lt; 2802,if([ref_facility]&lt; 2800,&#x27;Jinja District&#x27;,&#x27;Kaliro District&#x27;),if([ref_facility]&lt; 2805,&#x27;Kamuli District&#x27;,if([ref_facility]&lt; 2806,&#x27;Luuka District&#x27;,&#x27;Mayuge District&#x27;)))))),if([ref_facility]&lt; 2858,if([ref_facility]&lt; 2833,if([ref_facility]&lt; 2828,if([ref_facility]&lt; 2811,if([ref_facility]&lt; 2810,&#x27;Namayingo District&#x27;,&#x27;Namutumba District&#x27;),if([ref_facility]&lt; 2827,&#x27;Kampala District&#x27;,&#x27;Amudat District&#x27;)),if([ref_facility]&lt; 2830,if([ref_facility]&lt; 2829,&#x27;Karenga District&#x27;,&#x27;Nabilatuk District&#x27;),if([ref_facility]&lt; 2832,&#x27;Nakapiripirit District&#x27;,&#x27;Napak District&#x27;))),if([ref_facility]&lt; 2845,if([ref_facility]&lt; 2841,if([ref_facility]&lt; 2837,&#x27;Kabale District&#x27;,&#x27;Kanungu District&#x27;),if([ref_facility]&lt; 2844,&#x27;Kisoro District&#x27;,&#x27;Rubanda District&#x27;)),if([ref_facility]&lt; 2854,if([ref_facility]&lt; 2848,&#x27;Rukiga District&#x27;,&#x27;Rukungiri District&#x27;),if([ref_facility]&lt; 2856,&#x27;Alebtong District&#x27;,if([ref_facility]&lt; 2857,&#x27;Amolatar District&#x27;,&#x27;Apac District&#x27;))))),if([ref_facility]&lt; 2868,if([ref_facility]&lt; 2862,if([ref_facility]&lt; 2860,if([ref_facility]&lt; 2859,&#x27;Dokolo District&#x27;,&#x27;Kole District&#x27;),if([ref_facility]&lt; 2861,&#x27;Kwania District&#x27;,&#x27;Lira City&#x27;)),if([ref_facility]&lt; 2865,if([ref_facility]&lt; 2864,&#x27;Lira District&#x27;,&#x27;Otuke District&#x27;),if([ref_facility]&lt; 2866,&#x27;Oyam District&#x27;,&#x27;Buikwe District&#x27;))),if([ref_facility]&lt; 2876,if([ref_facility]&lt; 2873,if([ref_facility]&lt; 2869,&#x27;Buvuma District&#x27;,&#x27;Kassanda District&#x27;),if([ref_facility]&lt; 2875,&#x27;Kayunga District&#x27;,&#x27;Kiboga District&#x27;)),if([ref_facility]&lt; 2886,if([ref_facility]&lt; 2877,&#x27;Kyankwanzi District&#x27;,&#x27;Luwero District&#x27;),if([ref_facility]&lt; 2890,&#x27;Mityana District&#x27;,if([ref_facility]&lt; 2898,&#x27;Mukono District&#x27;,&#x27;Nakaseke District&#x27;)))))))),if([ref_facility]&lt; 3041,if([ref_facility]&lt; 2979,if([ref_facility]&lt; 2946,if([ref_facility]&lt; 2917,if([ref_facility]&lt; 2908,if([ref_facility]&lt; 2905,if([ref_facility]&lt; 2904,&#x27;Nakasongola District&#x27;,&#x27;Bukomansimbi District&#x27;),if([ref_facility]&lt; 2906,&#x27;Gomba District&#x27;,&#x27;Kalangala District&#x27;)),if([ref_facility]&lt; 2912,if([ref_facility]&lt; 2910,&#x27;Kalungu District&#x27;,&#x27;Kyotera District&#x27;),if([ref_facility]&lt; 2915,&#x27;Lwengo District&#x27;,&#x27;Masaka City&#x27;))),if([ref_facility]&lt; 2941,if([ref_facility]&lt; 2921,if([ref_facility]&lt; 2919,&#x27;Masaka District&#x27;,&#x27;Mpigi District&#x27;),if([ref_facility]&lt; 2923,&#x27;Sembabule District&#x27;,&#x27;Wakiso District&#x27;)),if([ref_facility]&lt; 2944,if([ref_facility]&lt; 2942,&#x27;Amuria District&#x27;,&#x27;Bukedea District&#x27;),if([ref_facility]&lt; 2945,&#x27;Kalaki District&#x27;,&#x27;Kapelebyong District&#x27;)))),if([ref_facility]&lt; 2960,if([ref_facility]&lt; 2954,if([ref_facility]&lt; 2951,if([ref_facility]&lt; 2948,&#x27;Katakwi District&#x27;,&#x27;Kumi District&#x27;),if([ref_facility]&lt; 2952,&#x27;Ngora District&#x27;,&#x27;Serere District&#x27;)),if([ref_facility]&lt; 2956,if([ref_facility]&lt; 2955,&#x27;Soroti City&#x27;,&#x27;Soroti District&#x27;),if([ref_facility]&lt; 2959,&#x27;Bundibugyo District&#x27;,&#x27;Bunyangabu District&#x27;))),if([ref_facility]&lt; 2970,if([ref_facility]&lt; 2963,if([ref_facility]&lt; 2962,&#x27;Fort Portal City&#x27;,&#x27;Kabarole District&#x27;),if([ref_facility]&lt; 2966,&#x27;Kamwenge District&#x27;,&#x27;Kasese District&#x27;)),if([ref_facility]&lt; 2973,if([ref_facility]&lt; 2971,&#x27;Kitagwenda District&#x27;,&#x27;Kyegegwa District&#x27;),if([ref_facility]&lt; 2976,&#x27;Kyenjojo District&#x27;,if([ref_facility]&lt; 2978,&#x27;Ntoroko District&#x27;,&#x27;Adjumani District&#x27;)))))),if([ref_facility]&lt; 3006,if([ref_facility]&lt; 2988,if([ref_facility]&lt; 2984,if([ref_facility]&lt; 2982,if([ref_facility]&lt; 2981,&#x27;Arua City&#x27;,&#x27;Arua District&#x27;),if([ref_facility]&lt; 2983,&#x27;Madi-Okollo District&#x27;,&#x27;Maracha District&#x27;)),if([ref_facility]&lt; 2986,if([ref_facility]&lt; 2985,&#x27;Moyo District&#x27;,&#x27;Nebbi District&#x27;),if([ref_facility]&lt; 2987,&#x27;Obongi District&#x27;,&#x27;Pakwach District&#x27;))),if([ref_facility]&lt; 3001,if([ref_facility]&lt; 2992,if([ref_facility]&lt; 2989,&#x27;Terego District&#x27;,&#x27;Yumbe District&#x27;),if([ref_facility]&lt; 2993,&#x27;Zombo District&#x27;,&#x27;Kampala District&#x27;)),if([ref_facility]&lt; 3003,if([ref_facility]&lt; 3002,&#x27;Gulu City&#x27;,&#x27;Mbarara City&#x27;),if([ref_facility]&lt; 3004,&#x27;Mbale City&#x27;,if([ref_facility]&lt; 3005,&#x27;Hoima City&#x27;,&#x27;Jinja City&#x27;))))),if([ref_facility]&lt; 3014,if([ref_facility]&lt; 3010,if([ref_facility]&lt; 3008,if([ref_facility]&lt; 3007,&#x27;Moroto District&#x27;,&#x27;Kabale District&#x27;),if([ref_facility]&lt; 3009,&#x27;Lira City&#x27;,&#x27;Kayunga District&#x27;)),if([ref_facility]&lt; 3012,if([ref_facility]&lt; 3011,&#x27;Mubende District&#x27;,&#x27;Masaka City&#x27;),if([ref_facility]&lt; 3013,&#x27;Wakiso District&#x27;,&#x27;Soroti City&#x27;))),if([ref_facility]&lt; 3022,if([ref_facility]&lt; 3016,if([ref_facility]&lt; 3015,&#x27;Fort Portal City&#x27;,&#x27;Arua City&#x27;),if([ref_facility]&lt; 3017,&#x27;Yumbe District&#x27;,&#x27;Gulu City&#x27;)),if([ref_facility]&lt; 3026,if([ref_facility]&lt; 3025,&#x27;Kitgum District&#x27;,&#x27;Lamwo District&#x27;),if([ref_facility]&lt; 3039,&#x27;Omoro District&#x27;,if([ref_facility]&lt; 3040,&#x27;Pader District&#x27;,&#x27;Bushenyi District&#x27;))))))),if([ref_facility]&lt; 3173,if([ref_facility]&lt; 3108,if([ref_facility]&lt; 3058,if([ref_facility]&lt; 3052,if([ref_facility]&lt; 3048,if([ref_facility]&lt; 3047,&#x27;Ibanda District&#x27;,&#x27;Isingiro District&#x27;),if([ref_facility]&lt; 3051,&#x27;Kazo District&#x27;,&#x27;Kiruhura District&#x27;)),if([ref_facility]&lt; 3056,if([ref_facility]&lt; 3055,&#x27;Mbarara City&#x27;,&#x27;Mbarara District&#x27;),if([ref_facility]&lt; 3057,&#x27;Sheema District&#x27;,&#x27;Mbale City&#x27;))),if([ref_facility]&lt; 3073,if([ref_facility]&lt; 3066,if([ref_facility]&lt; 3059,&#x27;Budaka District&#x27;,&#x27;Butaleja District&#x27;),if([ref_facility]&lt; 3072,&#x27;Kagadi District&#x27;,&#x27;Kakumiro District&#x27;)),if([ref_facility]&lt; 3084,if([ref_facility]&lt; 3082,&#x27;Kiryandongo District&#x27;,&#x27;Bugweri District&#x27;),if([ref_facility]&lt; 3094,&#x27;Jinja City&#x27;,if([ref_facility]&lt; 3095,&#x27;Jinja District&#x27;,&#x27;Kampala District&#x27;))))),if([ref_facility]&lt; 3145,if([ref_facility]&lt; 3118,if([ref_facility]&lt; 3110,if([ref_facility]&lt; 3109,&#x27;Kisoro District&#x27;,&#x27;Apac District&#x27;),if([ref_facility]&lt; 3114,&#x27;Kole District&#x27;,&#x27;Kwania District&#x27;)),if([ref_facility]&lt; 3124,if([ref_facility]&lt; 3119,&#x27;Oyam District&#x27;,&#x27;Buikwe District&#x27;),if([ref_facility]&lt; 3133,&#x27;Kayunga District&#x27;,&#x27;Mukono District&#x27;))),if([ref_facility]&lt; 3158,if([ref_facility]&lt; 3148,if([ref_facility]&lt; 3147,&#x27;Kyotera District&#x27;,&#x27;Lyantonde District&#x27;),if([ref_facility]&lt; 3149,&#x27;Masaka City&#x27;,&#x27;Sembabule District&#x27;)),if([ref_facility]&lt; 3167,if([ref_facility]&lt; 3165,&#x27;Wakiso District&#x27;,&#x27;Bunyangabu District&#x27;),if([ref_facility]&lt; 3170,&#x27;Kamwenge District&#x27;,if([ref_facility]&lt; 3172,&#x27;Kyenjojo District&#x27;,&#x27;Adjumani District&#x27;)))))),if([ref_facility]&lt; 3225,if([ref_facility]&lt; 3213,if([ref_facility]&lt; 3197,if([ref_facility]&lt; 3193,if([ref_facility]&lt; 3192,&#x27;Arua City&#x27;,&#x27;Pakwach District&#x27;),if([ref_facility]&lt; 3195,&#x27;Yumbe District&#x27;,&#x27;Zombo District&#x27;)),if([ref_facility]&lt; 3202,if([ref_facility]&lt; 3198,&#x27;Iganga District&#x27;,&#x27;Kampala District&#x27;),if([ref_facility]&lt; 3203,&#x27;Apac District&#x27;,&#x27;Wakiso District&#x27;))),if([ref_facility]&lt; 3217,if([ref_facility]&lt; 3215,if([ref_facility]&lt; 3214,&#x27;Arua City&#x27;,&#x27;Mitooma District&#x27;),if([ref_facility]&lt; 3216,&#x27;Budaka District&#x27;,&#x27;Kibuku District&#x27;)),if([ref_facility]&lt; 3220,if([ref_facility]&lt; 3219,&#x27;Pallisa District&#x27;,&#x27;Hoima District&#x27;),if([ref_facility]&lt; 3221,&#x27;Kagadi District&#x27;,if([ref_facility]&lt; 3222,&#x27;Masindi District&#x27;,&#x27;Kaliro District&#x27;))))),if([ref_facility]&lt; 3250,if([ref_facility]&lt; 3243,if([ref_facility]&lt; 3237,if([ref_facility]&lt; 3226,&#x27;Namayingo District&#x27;,&#x27;Kampala District&#x27;),if([ref_facility]&lt; 3239,&#x27;Lira City&#x27;,&#x27;Mityana District&#x27;)),if([ref_facility]&lt; 3246,if([ref_facility]&lt; 3245,&#x27;Mubende District&#x27;,&#x27;Kalungu District&#x27;),if([ref_facility]&lt; 3248,&#x27;Lwengo District&#x27;,&#x27;Mpigi District&#x27;))),if([ref_facility]&lt; 3333,if([ref_facility]&lt; 3329,if([ref_facility]&lt; 3328,&#x27;Wakiso District&#x27;,&#x27;Serere District&#x27;),if([ref_facility]&lt; 3330,&#x27;Kabarole District&#x27;,&#x27;Kasese District&#x27;)),if([ref_facility]&lt; 3344,if([ref_facility]&lt; 3334,&#x27;Kiboga District&#x27;,&#x27;Wakiso District&#x27;),if([ref_facility]&lt; 3345,&#x27;Kasese District&#x27;,if([ref_facility]&lt; 3346,&#x27;Kampala District&#x27;,&#x27;Wakiso District&#x27;))))))))))
+)</pre></details>
+  <h3>How <code>facility_level</code> is derived for value 3001</h3>
+  <ol class="trace"><li><span class="tag">Not satisfied</span>5 preceding range conditions</li><li class="hit"><span class="tag">Satisfied</span>[ref_facility]&gt;=3001 and [ref_facility]&lt;=3016</li><li class="ret"><span class="tag">Returns</span>&#x27;RRH&#x27;</li></ol>
+  <details><summary>Show the complete <code>facility_level</code> expression</summary><pre>if([ref_facility]&gt;=1 and [ref_facility]&lt;=424,&#x27;Clinic&#x27;,
+if([ref_facility]&gt;=425 and [ref_facility]&lt;=626,&#x27;General Hospital&#x27;,
+if([ref_facility]&gt;=627 and [ref_facility]&lt;=2710,&#x27;HC III&#x27;,
+if([ref_facility]&gt;=2711 and [ref_facility]&lt;=2992,&#x27;HC IV&#x27;,
+if([ref_facility]&gt;=2993 and [ref_facility]&lt;=3000,&#x27;NRH&#x27;,
+if([ref_facility]&gt;=3001 and [ref_facility]&lt;=3016,&#x27;RRH&#x27;,
+if([ref_facility]&gt;=3017 and [ref_facility]&lt;=3196,&#x27;Clinic&#x27;,
+if([ref_facility]&gt;=3197 and [ref_facility]&lt;=3213,&#x27;General Hospital&#x27;,
+if([ref_facility]&gt;=3214 and [ref_facility]&lt;=3332,&#x27;HC III&#x27;,
+if([ref_facility]&gt;=3333 and [ref_facility]&lt;=3344,&#x27;HC IV&#x27;, if([ref_facility]&gt;=3345 and [ref_facility]&lt;=3346,&#x27;General Hospital&#x27;, &#x27;&#x27; )))))))))))</pre></details>
+  <p>Both expressions depend on each facility keeping its position in the list. Section 7 explains why positions are never changed.</p>
+</section>
+
+<section>
+  <h2><span class="num">7</span>Positional choice lists</h2>
+  <p>In REDCap a dropdown stores the code to the left of the comma, not the label. In ICCC-3 Groups III, IV, VII and VIII of this registry, that code is a sequence number, and a calculated field converts it to the ICD-O-3.2 code. Three of the 26 choices of <code>iv_morph</code> (Group IV):</p>
+  <table>
+    <thead><tr><th>Stored value</th><th>Label shown to the abstractor</th><th><code>iv_code</code> returns</th></tr></thead>
+    <tbody id="iv"></tbody>
+  </table>
+  <pre>if([iv_morph]=&#x27;&#x27;,&#x27;&#x27;,
+ if([iv_morph]&gt;=1 and [iv_morph]&lt;=2, 9490,
+ if([iv_morph]=3, 9500,
+ if([iv_morph]&gt;=4 and [iv_morph]&lt;=6, 8680,
+ if([iv_morph]=7, 8681,
+ …</pre>
+  <p style="margin-top:12px">If a new choice were inserted at position 3 and the list renumbered, every record holding the stored value 3 would display the new choice, and <code>iv_code</code> would return its code. No record would have been edited. In a REDCap project in development status, such a change takes effect immediately and without a warning. The registry therefore applies three rules to positional lists:</p>
+  <ol class="plain">
+    <li>New choices are appended after the last existing code.</li>
+    <li>Existing codes are never deleted, reordered or renumbered.</li>
+    <li>A superseded choice keeps its code; its label is prefixed <code>[RETIRED]</code> and the choice is hidden from new entry with the <code>@HIDECHOICE</code> action tag.</li>
+  </ol>
+</section>
+
+<section>
+  <h2><span class="num">8</span>Method</h2>
+  <p>Labels, choices and expressions were exported from the UCI-Ped-Reg REDCap data dictionary on 1 October 2026 through the REDCap API (metadata only; no records). The Group X expression <code>x_extended</code> is shown in its corrected form of 13 October 2026, in which the site conditions and the Xa5 morphology list follow the ICCC-3 (2017) definitions. The page evaluates them with a parser that follows REDCap's comparison rules: equality is numeric when both operands are numbers and textual otherwise, and an ordering comparison with a blank operand is false.</p>
+  <p>Before publication, this parser was compared with the registry's reference evaluator over every combination of the 157 Group X morphologies and 327 topography codes, the Group IV code expression and the branching logic of the fields above: 103,870 evaluations, 0 disagreements. The values in sections 5 and 6 were computed at publication by the reference evaluator from the expressions shown, and <code>age_days</code> was checked against the calendar difference between the two dates. The site classification returned by <code>x_extended</code> was compared with the ICCC-3 (2017) site definitions for Xa, Xb and Xc over 7,521 morphology and topography combinations: 0 disagreements.</p>
+</section>
+</main>
+
+<footer><div class="wrap">
+  <p>Correspondence: jaymin@uccfug.org</p>
+  <p>Companion to a poster presented at the conference of the International Association of Cancer Registries, October 2026. No patient data are used on this page.</p>
+  <p>Steliarova-Foucher E, Stiller C, Lacour B, Kaatsch P. International Classification of Childhood Cancer, third edition. Cancer 2005;103:1457–67.<br>
+  Harris PA, Taylor R, Thielke R, Payne J, Gonzalez N, Conde JG. Research electronic data capture (REDCap). J Biomed Inform 2009;42:377–81.</p>
+</div></footer>
+
+<script>/* REDCap expression evaluator for the walkthrough page.
+ *
+ * Reproduces the semantics of registry_redcap/branching.py (REDCap Registry repo) for the
+ * constructs the Group X and Group IV expressions use: if(), left(), and/or, the six
+ * comparison operators, + - * /, string and number literals, and [field] references.
+ * Equality compares numerically when both sides parse as numbers, otherwise as text.
+ * Ordering comparisons are false when either side is blank. Arithmetic on a blank or
+ * non-numeric operand yields null (unknown). check_parity.py compares this file with the
+ * Python evaluator over every topography x morphology combination.
+ */
+(function (root) {
+  "use strict";
+
+  function tokenize(src) {
+    const out = [];
+    let i = 0;
+    while (i < src.length) {
+      const c = src[i];
+      if (/\s/.test(c)) { i++; continue; }
+      if (c === "[") {
+        const j = src.indexOf("]", i);
+        if (j < 0) throw new Error("unterminated field reference");
+        out.push({ k: "ref", v: src.slice(i + 1, j) });
+        i = j + 1; continue;
+      }
+      if (c === "'" || c === '"') {
+        const j = src.indexOf(c, i + 1);
+        if (j < 0) throw new Error("unterminated string");
+        out.push({ k: "str", v: src.slice(i + 1, j) });
+        i = j + 1; continue;
+      }
+      if (/[0-9.]/.test(c)) {
+        const m = /^[0-9]*\.?[0-9]+/.exec(src.slice(i));
+        out.push({ k: "num", v: parseFloat(m[0]) });
+        i += m[0].length; continue;
+      }
+      if (/[A-Za-z_]/.test(c)) {
+        const m = /^[A-Za-z_][A-Za-z0-9_]*/.exec(src.slice(i));
+        out.push({ k: "word", v: m[0].toLowerCase() });
+        i += m[0].length; continue;
+      }
+      const two = src.slice(i, i + 2);
+      if (["<>", "!=", "<=", ">=", "=="].includes(two)) { out.push({ k: "op", v: two }); i += 2; continue; }
+      if ("=<>+-*/(),".includes(c)) { out.push({ k: "op", v: c }); i++; continue; }
+      throw new Error("unexpected character " + c);
+    }
+    return out;
+  }
+
+  function parse(src) {
+    const t = tokenize(src);
+    let p = 0;
+    const peek = () => t[p];
+    const isOp = (v) => peek() && peek().k === "op" && peek().v === v;
+    const isWord = (v) => peek() && peek().k === "word" && peek().v === v;
+    const expect = (v) => { if (!isOp(v)) throw new Error("expected " + v); p++; };
+
+    function orExpr() {
+      let n = andExpr();
+      while (isWord("or")) { p++; n = { t: "or", l: n, r: andExpr() }; }
+      return n;
+    }
+    function andExpr() {
+      let n = cmpExpr();
+      while (isWord("and")) { p++; n = { t: "and", l: n, r: cmpExpr() }; }
+      return n;
+    }
+    function cmpExpr() {
+      const l = sumExpr();
+      const tok = peek();
+      if (tok && tok.k === "op" && ["=", "==", "<>", "!=", "<", ">", "<=", ">="].includes(tok.v)) {
+        p++;
+        return { t: "cmp", op: tok.v, l, r: sumExpr() };
+      }
+      return l;
+    }
+    function sumExpr() {
+      let n = termExpr();
+      while (isOp("+") || isOp("-")) { const op = t[p++].v; n = { t: "bin", op, l: n, r: termExpr() }; }
+      return n;
+    }
+    function termExpr() {
+      let n = unary();
+      while (isOp("*") || isOp("/")) { const op = t[p++].v; n = { t: "bin", op, l: n, r: unary() }; }
+      return n;
+    }
+    function unary() {
+      if (isOp("-")) { p++; return { t: "neg", e: unary() }; }
+      return atom();
+    }
+    function atom() {
+      const tok = peek();
+      if (!tok) throw new Error("unexpected end of expression");
+      if (tok.k === "num") { p++; return { t: "num", v: tok.v }; }
+      if (tok.k === "str") { p++; return { t: "str", v: tok.v }; }
+      if (tok.k === "ref") { p++; return { t: "ref", v: tok.v }; }
+      if (tok.k === "op" && tok.v === "(") { p++; const e = orExpr(); expect(")"); return e; }
+      if (tok.k === "word") {
+        p++;
+        if (tok.v === "true") return { t: "num", v: 1 };
+        if (tok.v === "false") return { t: "num", v: 0 };
+        expect("(");
+        const args = [];
+        if (!isOp(")")) { args.push(orExpr()); while (isOp(",")) { p++; args.push(orExpr()); } }
+        expect(")");
+        return { t: "call", name: tok.v, args };
+      }
+      throw new Error("unexpected token " + tok.v);
+    }
+    const tree = orExpr();
+    if (p !== t.length) throw new Error("trailing tokens");
+    return tree;
+  }
+
+  function asNumber(v) {
+    if (v === null || v === undefined) return null;
+    if (typeof v === "number") return v;
+    const s = String(v).trim();
+    if (s === "") return null;
+    const n = Number(s);
+    return Number.isFinite(n) ? n : null;
+  }
+  function text(v) {
+    if (v === null || v === undefined) return "";
+    if (typeof v === "number") return Number.isInteger(v) ? String(v) : String(v);
+    return String(v);
+  }
+
+  function value(n, vals) {
+    switch (n.t) {
+      case "num": return n.v;
+      case "str": return n.v;
+      case "ref": { const raw = vals[n.v]; return raw === undefined || raw === null ? "" : String(raw); }
+      case "neg": { const x = asNumber(value(n.e, vals)); return x === null ? null : -x; }
+      case "bin": {
+        const a = asNumber(value(n.l, vals)), b = asNumber(value(n.r, vals));
+        if (a === null || b === null) return null;
+        if (n.op === "+") return a + b;
+        if (n.op === "-") return a - b;
+        if (n.op === "*") return a * b;
+        return b === 0 ? null : a / b;
+      }
+      case "call": {
+        if (n.name === "if") return bool(n.args[0], vals) ? value(n.args[1], vals) : value(n.args[2], vals);
+        if (n.name === "left") {
+          const s = text(value(n.args[0], vals));
+          const k = asNumber(value(n.args[1], vals));
+          return k === null ? null : s.slice(0, Math.max(0, Math.trunc(k)));
+        }
+        throw new Error("function not supported on this page: " + n.name);
+      }
+      default: return bool(n, vals) ? "1" : "0";
+    }
+  }
+
+  function cmp(n, vals) {
+    const lv = value(n.l, vals), rv = value(n.r, vals);
+    if (["<", ">", "<=", ">="].includes(n.op)) {
+      if (lv === null || rv === null || lv === "" || rv === "") return false;
+      let l = asNumber(lv), r = asNumber(rv);
+      if (l === null || r === null) { l = String(lv); r = String(rv); }
+      if (n.op === "<") return l < r;
+      if (n.op === ">") return l > r;
+      if (n.op === "<=") return l <= r;
+      return l >= r;
+    }
+    const l = lv === null ? "" : lv, r = rv === null ? "" : rv;
+    const ln = asNumber(l), rn = asNumber(r);
+    const eq = ln !== null && rn !== null ? ln === rn : String(l) === String(r);
+    return n.op === "=" || n.op === "==" ? eq : !eq;
+  }
+
+  function bool(n, vals) {
+    if (n.t === "or") return bool(n.l, vals) || bool(n.r, vals);
+    if (n.t === "and") return bool(n.l, vals) && bool(n.r, vals);
+    if (n.t === "cmp") return cmp(n, vals);
+    const v = value(n, vals);
+    if (v === null) return false;
+    if (typeof v === "number") return v !== 0;
+    return String(v) !== "";
+  }
+
+  const cache = new Map();
+  function compiled(src) {
+    if (!cache.has(src)) cache.set(src, parse(src));
+    return cache.get(src);
+  }
+
+  const api = {
+    parse,
+    evaluate: (src, vals) => (src.trim() === "" ? true : bool(compiled(src), vals)),
+    value: (src, vals) => text(value(compiled(src), vals)),
+  };
+  if (typeof module !== "undefined" && module.exports) module.exports = api;
+  else root.RedcapExpr = api;
+})(this);
+</script>
+<script>
+(function () {
+  "use strict";
+  const D = {"fields": {"dx_cancer": {"label": "Was cancer as a diagnosis confirmed?", "branching": ""}, "topo_code": {"label": "Tumor Subsite (Drop Down)", "branching": "[dx_cancer] = '1'"}, "diag_main": {"label": "Cancer Group Classification Based on the diagnosis, choose the cancer group", "branching": "[dx_cancer] = '1'"}, "x_morph": {"label": "X: Germ Cell Tumors, Trophoblastic Tumors And Neoplasms Of Gonads", "branching": "[diag_main] = '10' AND [dx_cancer] = '1'"}, "x_extended": {"label": "Group X Extended Subgroup", "branching": "[diag_main] = '10' AND [dx_cancer] = '1'"}, "x_subgroup": {"label": "Group X Subgroup", "branching": "[diag_main] = '10' AND [dx_cancer] = '1'"}}, "dx": [["1", "Yes"], ["0", "No"]], "sites": [["719", "Brain, NOS", "C71.9"], ["753", "Pineal gland", "C75.3"], ["629", "Testis, NOS (Testicle, NOS)", "C62.9"], ["569", "Ovary", "C56.9"], ["529", "Vagina, NOS (Vaginal vault, Fornix of vagina, Gartner duct, Hymen)", "C52.9"], ["763", "Pelvis, NOS", "C76.3"], ["383", "Mediastinum, NOS", "C38.3"], ["809", "Unknown Primary Site", "C80.9"]], "groups": [["1", "I: Leukemias, Myeloproliferative And Myelodysplastic Diseases"], ["2", "II: Lymphomas And Reticuloendothelial Neoplasms"], ["3", "III: CNS And Miscellaneous Intracranial And Intraspinal Neoplasms"], ["4", "IV: Neuroblastoma And Other Peripheral Nervous Cell Tumors"], ["5", "V: Retinoblastoma"], ["6", "VI: Renal Tumors"], ["7", "VII: Hepatic Tumors"], ["8", "VIII: Malignant Bone Tumors"], ["9", "IX: Soft Tissue And Other Extraosseous Sarcomas"], ["10", "X: Germ Cell Tumors, Trophoblastic Tumors And Neoplasms Of Gonads"], ["11", "XI: Other Malignant Epithelial Neoplasms And Malignant Melanomas"], ["12", "XII: Other And Unspecified Malignant Neoplasms"]], "morphs": [["9060", "9060 - Dysgerminoma"], ["9070", "9070 - Embryonal carcinoma, NOS"], ["9071", "9071 - Yolk sac tumor"], ["9081", "9081 - Teratocarcinoma"], ["9085", "9085 - Mixed germ cell tumor"]], "x_extended": "if([x_morph]='' or [topo_code]='','',\n\nif((([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa1: Intracranial and intraspinal germinomas',\nif((([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc1: Malignant gonadal germinomas',\nif((([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb1: Malignant germinomas of extracranial and extragonadal sites',\n\nif((([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa2: Intracranial and intraspinal teratomas',\nif((([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc2: Malignant gonadal teratomas',\nif((([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb2: Malignant teratomas of extracranial and extragonadal sites',\nif((([x_morph]+0)=9090 or ([x_morph]+0)=9091) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc2: Malignant gonadal teratomas',\n\nif((([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa3: Intracranial and intraspinal embryonal carcinomas',\nif((([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc3: Gonadal embryonal carcinomas',\nif((([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb3: Embryonal carcinomas of extracranial and extragonadal sites',\n\nif((([x_morph]+0)=9071) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa4: Intracranial and intraspinal yolk sac tumor',\nif((([x_morph]+0)=9071) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc4: Gonadal yolk sac tumor',\nif((([x_morph]+0)=9071) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb4: Yolk sac tumor of extracranial and extragonadal sites',\n\nif((([x_morph]+0)=9100 or ([x_morph]+0)=9101) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa5: Intracranial and intraspinal choriocarcinoma',\nif((([x_morph]+0)=9100 or ([x_morph]+0)=9101 or ([x_morph]+0)=9103 or ([x_morph]+0)=9104 or ([x_morph]+0)=9105) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc5: Gonadal choriocarcinoma',\nif((([x_morph]+0)=9100 or ([x_morph]+0)=9101 or ([x_morph]+0)=9103 or ([x_morph]+0)=9104 or ([x_morph]+0)=9105) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb5: Choriocarcinomas of extracranial and extragonadal sites',\n\nif((([x_morph]+0)=9085) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) ),\n   'Xa6: Intracranial and intraspinal tumors of mixed forms',\nif((([x_morph]+0)=9085) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc6: Malignant gonadal tumors of mixed forms',\nif((([x_morph]+0)=9085) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) ),\n   'Xb6: Other/unspecified malignant mixed germ cell tumors of extracranial and extragonadal sites',\n\nif((([x_morph]+0)=9073) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) ),\n   'Xc7: Malignant gonadal gonadoblastoma', '')))))))))))))))))))))", "x_subgroup": "if([x_extended]<>'', if(left([x_extended],2)='Xa','Xa Intracranial and intraspinal germ cell tumors', if(left([x_extended],2)='Xb','Xb Malignant extracranial and extragonadal germ cell tumors', if(left([x_extended],2)='Xc','Xc Malignant gonadal germ cell tumors',''))),\r\n\r\nif([x_morph]='','', if( ( (([x_morph]+0)>=8590 and ([x_morph]+0)<=8671) or (([x_morph]+0)>=8000 and ([x_morph]+0)<=8005) ), 'Xe Other and unspecified malignant gonadal tumors', if(((([x_morph]+0)>=8010 and ([x_morph]+0)<=8576) or (([x_morph]+0)>=9000 and ([x_morph]+0)<=9015)), 'Xd Gonadal carcinomas', ''))))", "tree_ext": {"cond": "[x_morph]='' or [topo_code]=''", "then": {"leaf": "''"}, "else": {"cond": "(([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa1: Intracranial and intraspinal germinomas'"}, "else": {"cond": "(([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc1: Malignant gonadal germinomas'"}, "else": {"cond": "(([x_morph]+0)>=9060 and ([x_morph]+0)<=9065) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb1: Malignant germinomas of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa2: Intracranial and intraspinal teratomas'"}, "else": {"cond": "(([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc2: Malignant gonadal teratomas'"}, "else": {"cond": "(([x_morph]+0)>=9080 and ([x_morph]+0)<=9084) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb2: Malignant teratomas of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)=9090 or ([x_morph]+0)=9091) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc2: Malignant gonadal teratomas'"}, "else": {"cond": "(([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa3: Intracranial and intraspinal embryonal carcinomas'"}, "else": {"cond": "(([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc3: Gonadal embryonal carcinomas'"}, "else": {"cond": "(([x_morph]+0)=9070 or ([x_morph]+0)=9072) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb3: Embryonal carcinomas of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)=9071) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa4: Intracranial and intraspinal yolk sac tumor'"}, "else": {"cond": "(([x_morph]+0)=9071) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc4: Gonadal yolk sac tumor'"}, "else": {"cond": "(([x_morph]+0)=9071) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb4: Yolk sac tumor of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)=9100 or ([x_morph]+0)=9101) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa5: Intracranial and intraspinal choriocarcinoma'"}, "else": {"cond": "(([x_morph]+0)=9100 or ([x_morph]+0)=9101 or ([x_morph]+0)=9103 or ([x_morph]+0)=9104 or ([x_morph]+0)=9105) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc5: Gonadal choriocarcinoma'"}, "else": {"cond": "(([x_morph]+0)=9100 or ([x_morph]+0)=9101 or ([x_morph]+0)=9103 or ([x_morph]+0)=9104 or ([x_morph]+0)=9105) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb5: Choriocarcinomas of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)=9085) and ( (([topo_code]+0)>=700 and ([topo_code]+0)<=729) or (([topo_code]+0)>=751 and ([topo_code]+0)<=753) )", "then": {"leaf": "'Xa6: Intracranial and intraspinal tumors of mixed forms'"}, "else": {"cond": "(([x_morph]+0)=9085) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc6: Malignant gonadal tumors of mixed forms'"}, "else": {"cond": "(([x_morph]+0)=9085) and ( (([topo_code]+0)>=0 and ([topo_code]+0)<=559) or (([topo_code]+0)>=570 and ([topo_code]+0)<=619) or (([topo_code]+0)>=630 and ([topo_code]+0)<=699) or (([topo_code]+0)>=739 and ([topo_code]+0)<=750) or (([topo_code]+0)>=754 and ([topo_code]+0)<=768) or (([topo_code]+0)=809) )", "then": {"leaf": "'Xb6: Other/unspecified malignant mixed germ cell tumors of extracranial and extragonadal sites'"}, "else": {"cond": "(([x_morph]+0)=9073) and ( (([topo_code]+0)=569) or (([topo_code]+0)>=620 and ([topo_code]+0)<=629) )", "then": {"leaf": "'Xc7: Malignant gonadal gonadoblastoma'"}, "else": {"leaf": "''"}}}}}}}}}}}}}}}}}}}}}}, "tree_sub": {"cond": "[x_extended]<>''", "then": {"cond": "left([x_extended],2)='Xa'", "then": {"leaf": "'Xa Intracranial and intraspinal germ cell tumors'"}, "else": {"cond": "left([x_extended],2)='Xb'", "then": {"leaf": "'Xb Malignant extracranial and extragonadal germ cell tumors'"}, "else": {"cond": "left([x_extended],2)='Xc'", "then": {"leaf": "'Xc Malignant gonadal germ cell tumors'"}, "else": {"leaf": "''"}}}}, "else": {"cond": "[x_morph]=''", "then": {"leaf": "''"}, "else": {"cond": "( (([x_morph]+0)>=8590 and ([x_morph]+0)<=8671) or (([x_morph]+0)>=8000 and ([x_morph]+0)<=8005) )", "then": {"leaf": "'Xe Other and unspecified malignant gonadal tumors'"}, "else": {"cond": "((([x_morph]+0)>=8010 and ([x_morph]+0)<=8576) or (([x_morph]+0)>=9000 and ([x_morph]+0)<=9015))", "then": {"leaf": "'Xd Gonadal carcinomas'"}, "else": {"leaf": "''"}}}}}, "iv": [["2", "9490 - Ganglioneuroblastoma"], ["3", "9500 - Neuroblastoma, NOS"], ["5", "8680 - Paraganglioma, NOS"]], "iv_code": "if([iv_morph]='','',\r\n if([iv_morph]>=1 and [iv_morph]<=2, 9490,\r\n if([iv_morph]=3, 9500,\r\n if([iv_morph]>=4 and [iv_morph]<=6, 8680,\r\n if([iv_morph]=7, 8681,\r\n if([iv_morph]=8, 8682,\r\n if([iv_morph]=9, 8683,\r\n if([iv_morph]=10, 8690,\r\n if([iv_morph]=11, 8691,\r\n if([iv_morph]=12, 8692,\r\n if([iv_morph]>=13 and [iv_morph]<=14, 8693,\r\n if([iv_morph]>=15 and [iv_morph]<=16, 8700,\r\n if([iv_morph]>=17 and [iv_morph]<=18, 9501,\r\n if([iv_morph]>=19 and [iv_morph]<=20, 9502,\r\n if([iv_morph]=21, 9503,\r\n if([iv_morph]=22, 9504,\r\n if([iv_morph]=23, 9520,\r\n if([iv_morph]=24, 9521,\r\n if([iv_morph]=25, 9522,\r\n if([iv_morph]=26, 9523, ''))))))))))))))))))))", "iv_n": 26, "counts": {"topo": 327, "xmorph": 157}, "example": {"dx_cancer": "1", "topo_code": "629", "diag_main": "10", "x_morph": "9071"}};
+  const R = window.RedcapExpr;
+  const vals = { dx_cancer: "", topo_code: "", diag_main: "", x_morph: "" };
+  const $ = (id) => document.getElementById(id);
+  const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+  const siteName = (t) => { const s = D.sites.find((x) => x[0] === t); return s ? s[1] + " (" + s[2] + ")" : t; };
+  const morphName = (m) => { const s = D.morphs.find((x) => x[0] === m); return s ? s[1] : m; };
+
+  document.querySelectorAll("[data-label]").forEach((el) => { el.textContent = D.fields[el.dataset.label].label; });
+
+  function radios(container, name, opts, key) {
+    container.innerHTML = opts.map(([c, l]) =>
+      '<label class="opt"><input type="radio" name="' + name + '" value="' + esc(c) + '"> <span>' + esc(l) + "</span></label>").join("");
+    container.addEventListener("change", (ev) => { vals[key] = ev.target.value; update(); });
+  }
+  radios($("c1"), "dx", D.dx, "dx_cancer");
+  radios($("c3"), "grp", D.groups, "diag_main");
+  $("c2").insertAdjacentHTML("beforeend", D.sites.map(([t, l, c]) => '<option value="' + t + '">' + esc(l) + " (" + c + ")</option>").join(""));
+  $("c4").insertAdjacentHTML("beforeend", D.morphs.map(([c, l]) => '<option value="' + c + '">' + esc(l) + "</option>").join(""));
+  $("c2").addEventListener("change", (ev) => { vals.topo_code = ev.target.value; update(); });
+  $("c4").addEventListener("change", (ev) => { vals.x_morph = ev.target.value; update(); });
+
+  function setControls() {
+    document.querySelectorAll('input[name=dx]').forEach((r) => { r.checked = r.value === vals.dx_cancer; });
+    document.querySelectorAll('input[name=grp]').forEach((r) => { r.checked = r.value === vals.diag_main; });
+    $("c2").value = vals.topo_code;
+    $("c4").value = vals.x_morph;
+  }
+  $("load").addEventListener("click", () => { Object.assign(vals, D.example); setControls(); update(); });
+  $("clear").addEventListener("click", () => { Object.keys(vals).forEach((k) => (vals[k] = "")); setControls(); update(); });
+
+  function showField(fs, field) {
+    const expr = D.fields[field].branching;
+    const ok = R.evaluate(expr, vals);
+    fs.classList.toggle("off", !ok);
+    fs.querySelector(".body").hidden = !ok;
+    fs.querySelector(".hidden-note").hidden = ok;
+    fs.querySelector("[data-rule]").innerHTML = "Branching logic: " + esc(expr) +
+      (ok ? ' <span class="ok">(satisfied: displayed)</span>' : ' <span class="no">(not satisfied: not displayed)</span>');
+    return ok;
+  }
+
+  function trace(node, v) {
+    const steps = [];
+    while (node.cond !== undefined) {
+      const hit = R.evaluate(node.cond, v);
+      steps.push({ cond: node.cond, hit });
+      node = hit ? node.then : node.else;
+    }
+    return { steps, leaf: node.leaf };
+  }
+  function renderTrace(ol, node, v, result) {
+    const t = trace(node, v);
+    const misses = t.steps.filter((s) => !s.hit);
+    let html = "";
+    if (misses.length > 4) {
+      html += '<li><span class="tag">Not satisfied</span>' + misses.length + " preceding conditions (shown in the complete expression)</li>";
+      t.steps.filter((s) => s.hit).forEach((s) => { html += '<li class="hit"><span class="tag">Satisfied</span>' + esc(s.cond) + "</li>"; });
+    } else {
+      t.steps.forEach((s) => {
+        html += s.hit ? '<li class="hit"><span class="tag">Satisfied</span>' + esc(s.cond) + "</li>"
+                      : '<li><span class="tag">Not satisfied</span>' + esc(s.cond) + "</li>";
+      });
+    }
+    html += '<li class="ret"><span class="tag">Returns</span>' + (result === "" ? "'' (blank)" : esc("'" + result + "'")) + "</li>";
+    ol.innerHTML = html;
+  }
+
+  function calcFor(topo, morph) {
+    const v = { topo_code: topo, x_morph: morph };
+    const ext = R.value(D.x_extended, v);
+    const sub = R.value(D.x_subgroup, Object.assign({}, v, { x_extended: ext }));
+    return { ext, sub };
+  }
+
+  function update() {
+    const s2 = showField($("f2"), "topo_code");
+    const s3 = showField($("f3"), "diag_main");
+    const s4 = showField($("f4"), "x_morph");
+    const complete = s2 && s3 && s4 && vals.topo_code && vals.x_morph;
+    $("s3-wait").hidden = !!complete;
+    $("s3-body").hidden = !complete;
+    if (complete) {
+      const r = calcFor(vals.topo_code, vals.x_morph);
+      $("res").innerHTML =
+        '<tr><td class="mono">topo_code</td><td class="val">' + esc(vals.topo_code) + '</td><td>Entered: ' + esc(siteName(vals.topo_code)) + "</td></tr>" +
+        '<tr><td class="mono">x_morph</td><td class="val">' + esc(vals.x_morph) + '</td><td>Entered: ' + esc(morphName(vals.x_morph)) + "</td></tr>" +
+        '<tr><td class="mono">x_extended</td><td class="val">' + esc(r.ext || "(blank)") + "</td><td>Calculated by <code>@CALCTEXT</code> from <code>x_morph</code> and <code>topo_code</code></td></tr>" +
+        '<tr><td class="mono">x_subgroup</td><td class="val">' + esc(r.sub || "(blank)") + "</td><td>Calculated by <code>@CALCTEXT</code> from <code>x_extended</code> and <code>x_morph</code></td></tr>";
+      const v = { topo_code: vals.topo_code, x_morph: vals.x_morph };
+      renderTrace($("trace-ext"), D.tree_ext, v, r.ext);
+      renderTrace($("trace-sub"), D.tree_sub, Object.assign({}, v, { x_extended: r.ext }), r.sub);
+    }
+    const showSites = s4 && vals.x_morph;
+    $("s4-wait").hidden = !!showSites;
+    $("s4-body").hidden = !showSites;
+    if (showSites) {
+      $("s4-morph").textContent = morphName(vals.x_morph);
+      $("sites").innerHTML = D.sites.map(([t, l, c]) => {
+        const r = calcFor(t, vals.x_morph);
+        return '<tr' + (t === vals.topo_code ? ' class="current"' : "") + "><td>" + esc(l) + " (" + c + ")</td><td>" + esc(r.ext || "(blank)") + "</td><td>" + esc(r.sub || "(blank)") + "</td></tr>";
+      }).join("");
+    }
+  }
+
+  $("full-ext").textContent = D.x_extended;
+  $("full-sub").textContent = D.x_subgroup;
+  $("iv").innerHTML = D.iv.map(([c, l]) => "<tr><td class=\"mono\">" + esc(c) + "</td><td>" + esc(l) + "</td><td class=\"val\">" + esc(R.value(D.iv_code, { iv_morph: c })) + "</td></tr>").join("");
+  if (location.hash === "#example") { Object.assign(vals, D.example); setControls(); }
+  update();
+})();
+</script>
+</body>
+</html>
